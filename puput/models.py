@@ -170,11 +170,11 @@ class EntryPage(Entry, Page):
 
     def get_context(self, request, *args, **kwargs):
         context = super(EntryPage, self).get_context(request, *args, **kwargs)
-        if not self.last_published_at and not self.owner:
+        if not self.owner and (not self.last_published_at or getattr(request, 'is_preview', False)):
             # because we're likely hiding the owner dropdown based on permission, the value is None when
             # the entry isn't published yet and this throws an error on preview. 
             # TODO: maybe best solution is to update the fieldpanel queryset to only show the current user
-            self.owner = self._meta.model.objects.get(pk=self.pk)
+            self.owner = self._meta.model.objects.get(pk=self.pk).owner
         context['blog_page'] = self.blog_page
         return context
 
