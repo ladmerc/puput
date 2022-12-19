@@ -133,7 +133,7 @@ class EntryPage(Entry, Page):
     promote_panels = Page.promote_panels + getattr(Entry, 'promote_panels', [])
 
     settings_panels = Page.settings_panels + [
-        FieldPanel('date'), FieldPanel('owner'),
+        FieldPanel('date'), FieldPanel('owner', permission=getattr(settings, 'PUPUT_USER_PANEL_PERMISSION', None)),
     ] + getattr(Entry, 'settings_panels', [])
 
     # Parent and child settings
@@ -170,6 +170,11 @@ class EntryPage(Entry, Page):
 
     def get_context(self, request, *args, **kwargs):
         context = super(EntryPage, self).get_context(request, *args, **kwargs)
+        if not self.last_published_at and not self.owner:
+            # because we're likely hiding the owner dropdown based on permission, the value is None when
+            # the entry isn't published yet and this throws an error on preview. 
+            # TODO: maybe best solution is to update the fieldpanel queryset to only show the current user
+            self.owner = self._meta.model.objects.get(pk=self.pk)
         context['blog_page'] = self.blog_page
         return context
 
